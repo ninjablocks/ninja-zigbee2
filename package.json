@@ -1,0 +1,15 @@
+{
+  "name": "ninja-zigbee2",
+  "version": "0.0.0",
+  "description": "Ninja Blocks ZigBee Driver",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Elliot Shepherd <elliot@ninjablocks.com>",
+  "license": "ISC",
+  "dependencies": {
+    "glob": "^3.2.9",
+    "underscore": "^1.6.0"
+  }
+}
