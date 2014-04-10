@@ -2,20 +2,16 @@
 
 var util = require('util');
 var stream = require('stream');
-
 var glob = require('glob');
-
 var zigbee = require('zigbee');
-
 var _ = require('underscore');
-
 var OnOffDevice = require('./devices/OnOffDevice');
 
 function ZigBeeDriver(opts, app) {
   this.opts = opts;
   this.app = app;
 
-  this.bridges = {};
+  this.seenDevices = [];
 
   app.once('client::up', function() {
     this.log.debug('Starting up');
@@ -66,20 +62,22 @@ ZigBeeDriver.prototype.connect = function(path) {
           .then(function() {
             client.resetDevice(false);
           })//*/
-          .delay(2000)
 
           .then(client.startCoordinator())
 
-          .delay(2000)
           // now find existing devices and print them out
           .then(function() {
 
-            log.info('Coordinator started. Searching for devices');
-            client.devices().then(function(devices) {
-              devices.forEach(function(device) {
-                self.handleDevice(device);
+            log.info('Coordinator started.');
+
+            setInterval(function() {
+              client.devices().then(function(devices) {
+                devices.forEach(function(device) {
+                  self.handleDevice(device);
+                });
               });
-            });
+            }, 5000);
+           
           });
       })
       .done(function() {
@@ -92,10 +90,16 @@ ZigBeeDriver.prototype.connect = function(path) {
 ZigBeeDriver.prototype.handleDevice = function(device) {
   var log = this.log;
 
+  if (this.seenDevices.indexOf(device.deviceInfo.shortAddr) > -1) {
+    return;
+  }
+
+  this.seenDevices.push(device.deviceInfo.shortAddr);
+
   log.info('Got a new device IEEE:%s Addr:0x%s', device.IEEEAddress, device.deviceInfo.shortAddr.toString(16));
 
-  device.findEndpoints(0x0104);
-  device.findActiveEndpoints();
+  //device.findEndpoints(0x0104);
+  //device.findActiveEndpoints();
 
   var self = this;
 
