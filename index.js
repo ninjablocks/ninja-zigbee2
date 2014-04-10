@@ -77,8 +77,10 @@ ZigBeeDriver.prototype.connect = function(path) {
                 });
               });
             }, 5000);
-           
+          }).catch(function(err) {
+             log.error('ZigBee client failed:', err.stack);
           });
+
       })
       .done(function() {
         log.info('ZigBee client running.');
