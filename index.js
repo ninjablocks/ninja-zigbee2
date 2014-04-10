@@ -35,7 +35,7 @@ function ZigBeeDriver(opts, app) {
 util.inherits(ZigBeeDriver, stream);
 
 ZigBeeDriver.prototype.getDevicePath = function(cb) {
-  glob('/dev/cu.usbmodem*', function (err, devices) {
+  glob('{/dev/tty.zigbee,/dev/cu.usbmodem*}', function (err, devices) {
     // TODO: Support the CC2530 on the Sphere.
     if (err || devices.length != 1) {
       cb(new Error('Found ' + devices.length + ' devices that could be the CC2531 usb dongle.'));
@@ -51,11 +51,26 @@ ZigBeeDriver.prototype.connect = function(path) {
   var self = this;
    zigbee
       .connectNetworkProcessor(path)
+      
       .then(function(client) {
         self.client = client;
         log.info('ZigBee device ready, setting up as coordinator');
-        
-        client.startCoordinator()
+
+        return client.firmwareVersion().then(function(version) {
+            log.info('CC2530/1 firmware version: %s %d.%d.%d', version.type,
+            version.specifics.majorRelease, version.specifics.minorRelease,
+            version.specifics.maintenanceRelease);
+          })
+          
+          /*/ reset our device so we get back to a clean state
+          .then(function() {
+            client.resetDevice(false);
+          })//*/
+          .delay(2000)
+
+          .then(client.startCoordinator())
+
+          .delay(2000)
           // now find existing devices and print them out
           .then(function() {
 
@@ -77,11 +92,21 @@ ZigBeeDriver.prototype.connect = function(path) {
 ZigBeeDriver.prototype.handleDevice = function(device) {
   var log = this.log;
 
-  log.info('Got a new device', device);
+  log.info('Got a new device IEEE:%s Addr:0x%s', device.IEEEAddress, device.deviceInfo.shortAddr.toString(16));
+
+  device.findEndpoints(0x0104);
+  device.findActiveEndpoints();
 
   var self = this;
 
-  device.on('endpoint', function(endpoint) {
+  // HACK: Wait 5 seconds then use whatever endpoints we've found
+  setTimeout(function() {
+    for (var id in device._endpoints) {
+      addEndpoint(device._endpoints[id]);
+    }
+  }, 5000);
+
+  function addEndpoint(endpoint) {
     log.debug('Got endpoint', endpoint.toString());
 
     endpoint.inClusters().then(function(inClusters) {
@@ -129,7 +154,8 @@ ZigBeeDriver.prototype.handleDevice = function(device) {
     }).catch(function(err) {
       console.error('Failed getting clusters for device', err.stack);
     });
-  });
+  }
+
 };
 
 
