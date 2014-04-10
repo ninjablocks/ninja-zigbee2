@@ -80,6 +80,10 @@ ZigBeeDriver.prototype.connect = function(path) {
                 self.handleDevice(device);
               });
             });
+	    client.on('device_announce', function(device) {
+		console.log('Got new ZigBee device:', device.IEEEAddress);
+		handleDevice(device);
+	    });
           });
       })
       .done(function() {
