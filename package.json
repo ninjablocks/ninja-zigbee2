@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "glob": "^3.2.9",
-    "underscore": "^1.6.0"
+    "underscore": "^1.6.0",
+    "zigbee": "git://github.com/ninjablocks/node-zigbee.git"
   }
 }

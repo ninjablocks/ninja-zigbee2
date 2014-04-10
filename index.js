@@ -5,7 +5,7 @@ var stream = require('stream');
 
 var glob = require('glob');
 
-var ZigBee = require('../../../zigbee-znp-poc');
+var zigbee = require('zigbee');
 
 var _ = require('underscore');
 
@@ -49,7 +49,7 @@ ZigBeeDriver.prototype.getDevicePath = function(cb) {
 ZigBeeDriver.prototype.connect = function(path) {
   var log = this.log;
   var self = this;
-   ZigBee
+   zigbee
       .connectNetworkProcessor(path)
       .then(function(client) {
         self.client = client;
