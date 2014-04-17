@@ -34,14 +34,14 @@ driver.on('register', function(device) {
    if (device.D == 1008) { //It's a light
       setInterval(function() {
          device.write({bri:254,sat:254,hue:Math.floor(Math.random()* 65535),on:true,transitionTime:0});
-      }, 1000);
+      }, 2000);
     }
 
     if (device.D == 238) { //It's a relay
       var x = false;
       setInterval(function() {
          device.write(x=!x);
-      }, 100);
+      }, 2000);
     }
 
 });
