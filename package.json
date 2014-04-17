@@ -1,6 +1,6 @@
 {
   "name": "ninja-zigbee2",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Ninja Blocks ZigBee Driver",
   "main": "index.js",
   "scripts": {
