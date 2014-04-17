@@ -61,6 +61,11 @@ ZigBeeDriver.prototype.connect = function(path) {
       console.log('CC2530/1 firmware version: %s %s', version.type, versionString);
 
     })
+    /*/ 
+    .then(function() {
+      console.log('Resetting device');
+      client.resetDevice(false);
+    })//*/
     .then(client.startCoordinator.bind(client))
     .then(function() {
   
@@ -154,4 +159,3 @@ ZigBeeDriver.prototype.handleDevice = function(device) {
 
 
 module.exports = ZigBeeDriver;
-
