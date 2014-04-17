@@ -3,7 +3,8 @@
 var util = require('util');
 var stream = require('stream');
 var glob = require('glob');
-var zigbee = require('zigbee');
+var ZigBee = require('zigbee');
+
 var _ = require('underscore');
 var OnOffDevice = require('./devices/OnOffDevice');
 
@@ -45,48 +46,40 @@ ZigBeeDriver.prototype.getDevicePath = function(cb) {
 ZigBeeDriver.prototype.connect = function(path) {
   var log = this.log;
   var self = this;
-   zigbee
-      .connectNetworkProcessor(path)
-      
-      .then(function(client) {
-        self.client = client;
-        log.info('ZigBee device ready, setting up as coordinator');
 
-        return client.firmwareVersion().then(function(version) {
-            log.info('CC2530/1 firmware version: %s %d.%d.%d', version.type,
-            version.specifics.majorRelease, version.specifics.minorRelease,
-            version.specifics.maintenanceRelease);
-          })
-          
-          /*/ reset our device so we get back to a clean state
-          .then(function() {
-            client.resetDevice(false);
-          })//*/
+  var client = new ZigBee();
+  client.connectToPort(path)
+    .then(client.firmwareVersion.bind(client))
+    .then(function(version) {
 
-          .then(client.startCoordinator())
+      var versionString = [
+        version.specifics.majorRelease,
+        version.specifics.minorRelease,
+        version.specifics.maintenanceRelease
+      ].join('.');
 
-          // now find existing devices and print them out
-          .then(function() {
+      console.log('CC2530/1 firmware version: %s %s', version.type, versionString);
 
-            log.info('Coordinator started.');
+    })
+    .then(client.startCoordinator.bind(client))
+    .then(function() {
+  
+      log.info('Coordinator started.');
 
-            setInterval(function() {
-              client.devices().then(function(devices) {
-                devices.forEach(function(device) {
-                  self.handleDevice(device);
-                });
-              });
-            }, 5000);
-          }).catch(function(err) {
-             log.error('ZigBee client failed:', err.stack);
+      setInterval(function() {
+        client.devices().then(function(devices) {
+          devices.forEach(function(device) {
+            self.handleDevice(device);
           });
-
-      })
-      .done(function() {
-        log.info('ZigBee client running.');
-      }, function(err) {
-        log.error('ZigBee client failed:', err.stack);
-      });
+        });
+      }, 5000);
+          
+    })
+    .done(function() {
+      log.info('ZigBee client running.');
+    }, function(err) {
+      log.error('ZigBee client failed:', err.stack);
+    });
 };
 
 ZigBeeDriver.prototype.handleDevice = function(device) {
@@ -100,17 +93,12 @@ ZigBeeDriver.prototype.handleDevice = function(device) {
 
   log.info('Got a new device IEEE:%s Addr:0x%s', device.IEEEAddress, device.deviceInfo.shortAddr.toString(16));
 
-  //device.findEndpoints(0x0104);
-  //device.findActiveEndpoints();
+  device.on('endpoint', addEndpoint);
+
+  device.findEndpoints(0x0104);
+  device.findActiveEndpoints();
 
   var self = this;
-
-  // HACK: Wait 5 seconds then use whatever endpoints we've found
-  setTimeout(function() {
-    for (var id in device._endpoints) {
-      addEndpoint(device._endpoints[id]);
-    }
-  }, 5000);
 
   function addEndpoint(endpoint) {
     log.debug('Got endpoint', endpoint.toString());
