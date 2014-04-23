@@ -21,7 +21,7 @@ function ZigBeeDriver(opts, app) {
     // TODO: Allow path set by configuration/env vars
     this.getDevicePath(function(err, path) {
       if (err) {
-        return this.log.error(err);
+        return this.log.warn('Not starting driver -', err.message);
       }
       this.connect(path);
     }.bind(this));
@@ -35,7 +35,7 @@ ZigBeeDriver.prototype.getDevicePath = function(cb) {
   glob('{/dev/tty.zigbee,/dev/cu.usbmodem*}', function (err, devices) {
     // TODO: Support the CC2530 on the Sphere.
     if (err || devices.length != 1) {
-      cb(new Error('Found ' + devices.length + ' devices that could be the CC2531 usb dongle.'));
+      return cb(new Error('Found ' + devices.length + ' devices that could be the CC2530 device.'));
     }
 
     cb(null, devices[0]);
