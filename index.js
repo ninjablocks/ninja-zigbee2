@@ -7,6 +7,7 @@ var ZigBee = require('zigbee');
 
 var _ = require('underscore');
 var OnOffDevice = require('./devices/OnOffDevice');
+var MeteringDevice = require('./devices/MeteringDevice');
 
 function ZigBeeDriver(opts, app) {
   this.opts = opts;
@@ -134,12 +135,16 @@ ZigBeeDriver.prototype.handleDevice = function(device) {
             log.info('Found an On/Off device');
 
             ninjaDevice = new OnOffDevice(zcl, log.extend(zcl.toString()));
-            ninjaDevice.G = 'zigbee' + device.IEEEAddress.toString() + endpoint.endpointId;
+          } else if (zcl.description.name == 'Simple Metering') {
+            log.info('Found an Metering device (power?)');
 
-            ninjaDevice.name += ' - ' + deviceName;
+            ninjaDevice = new MeteringDevice(zcl, log.extend(zcl.toString()));
           }
 
           if (ninjaDevice) {
+            ninjaDevice.name += ' - ' + deviceName;
+            ninjaDevice.G = 'zigbee' + device.IEEEAddress.toString() + endpoint.endpointId;
+
             ninjaDevice.on('ready', function() {
               self.emit('register', ninjaDevice);
             });
