@@ -16,7 +16,8 @@ function MeteringDevice(cluster, log) {
     this.emit('ready');
   }.bind(this));
 
-  this.value = cluster.attributes.InstantaneousDemand;
+  // UUUURGGGH
+  this.value = cluster.attributes.IstantaneousDemand || cluster.attributes.InstantaneousDemand;
 
   // XXX: Replace me with reporting
   setInterval(function() {
