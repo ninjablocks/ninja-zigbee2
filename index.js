@@ -8,6 +8,7 @@ var ZigBee = require('zigbee');
 var _ = require('underscore');
 var OnOffDevice = require('./devices/OnOffDevice');
 var MeteringDevice = require('./devices/MeteringDevice');
+var IASZoneDevice = require('./devices/IASZoneDevice');
 
 function ZigBeeDriver(opts, app) {
   this.opts = opts;
@@ -62,14 +63,14 @@ ZigBeeDriver.prototype.connect = function(path) {
       console.log('CC2530/1 firmware version: %s %s', version.type, versionString);
 
     })
-    /*/ 
+    /*/
     .then(function() {
       console.log('Resetting device');
       client.resetDevice(false);
     })//*/
     .then(client.startCoordinator.bind(client))
     .then(function() {
-  
+
       log.info('Coordinator started.');
 
       setInterval(function() {
@@ -79,7 +80,7 @@ ZigBeeDriver.prototype.connect = function(path) {
           });
         });
       }, 5000);
-          
+
     })
     .done(function() {
       log.info('ZigBee client running.');
@@ -139,6 +140,10 @@ ZigBeeDriver.prototype.handleDevice = function(device) {
             log.info('Found an Metering device (power?)');
 
             ninjaDevice = new MeteringDevice(zcl, log.extend(zcl.toString()));
+          } else if (zcl.description.name == 'IAS Zone') {
+            log.info('Found an IAS Zone');
+
+            ninjaDevice = new IASZoneDevice(zcl, log.extend(zcl.toString()));
           }
 
           if (ninjaDevice) {
@@ -153,8 +158,10 @@ ZigBeeDriver.prototype.handleDevice = function(device) {
           }
 
         });
+      }).catch(function(err) {
+        log.warn('FAILED TO READ ATTRIBUTES', err, err.stack);
       });
-      
+
     }).catch(function(err) {
       console.error('Failed getting clusters for device', err.stack);
     });
