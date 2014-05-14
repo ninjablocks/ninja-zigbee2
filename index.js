@@ -49,7 +49,7 @@ ZigBeeDriver.prototype.connect = function(path) {
   var log = this.log;
   var self = this;
 
-  var client = new ZigBee();
+  var client = this.client = new ZigBee();
   client.connectToPort(path)
     .then(client.firmwareVersion.bind(client))
     .then(function(version) {
@@ -167,6 +167,42 @@ ZigBeeDriver.prototype.handleDevice = function(device) {
     });
   }
 
+};
+
+ZigBeeDriver.prototype.config = function(rpc,cb) {
+
+  var self = this;
+
+  if (!rpc) {
+    return cb(null,{"contents":[
+      { "type": "input_field_select", "field_name": "pairingTime", "label": "Pairing Time", "options": [{ "name": "1 minute", "value": "60", "selected": true}, { "name": "2 minutes", "value": "120"}, { "name": "3 minutes", "value": "180"}, { "name": "4 minutes", "value": "240"}], "required": false },
+      { "type": "submit", "name": "Start Pairing", "rpc_method": "startPairing" }
+    ]});
+  }
+
+  switch (rpc.method) {
+    case 'startPairing':
+      var pairingTime = parseInt(rpc.params.pairingTime, 10);
+      this.client.sendPermitJoiningRequest({Timeout:pairingTime});
+      // XXX: Check the returned status!
+      cb(null, {
+        "contents": [
+          { "type":"paragraph", "text":"Pairing has been enabled for " + pairingTime + " seconds."},
+          { "type":"close", "text":"Close"}
+        ]
+      });
+      setTimeout(function() {
+        self.emit('announcement', {
+          "contents": [
+            { "type":"paragraph", "text":"Zigbee : No longer pairing."},
+            { "type":"close", "text":"Close"}
+          ]
+        });
+      }, pairingTime * 1000);
+      break;
+    default:
+      log('Unknown rpc method', rpc.method, rpc);
+  }
 };
 
 

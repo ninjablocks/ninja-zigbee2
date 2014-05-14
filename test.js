@@ -53,4 +53,16 @@ driver.save = function(config) {
 
 setTimeout(function() {
     app.emit('client::up');
+
+
+    setTimeout(function() {
+      driver.config({
+        method: 'startPairing',
+        params: {
+          pairingTime: 60
+        }
+      }, function(err, response) {
+        console.log('Response from pairing request', err, response);
+      });
+    }, 4000);
 }, 500);
