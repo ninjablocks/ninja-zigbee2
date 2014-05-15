@@ -22,13 +22,13 @@ var ZONE_STATE_BITS = [
     'Reserved8'
 ];
 
-function IASZone(cluster, log) {
+function IASZone(cluster, log, deviceId, name) {
   this.cluster = cluster;
 
   this.writable = true;
   this.V = 0;
-  this.D = 260; // 260 for motion and 207 for contact switch
-  this.name = 'Security Zone';
+  this.D = deviceId;
+  this.name = name;
 
   this.log = log;
   process.nextTick(function() {

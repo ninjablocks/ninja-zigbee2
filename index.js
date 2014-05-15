@@ -143,7 +143,13 @@ ZigBeeDriver.prototype.handleDevice = function(device) {
           } else if (zcl.description.name == 'IAS Zone') {
             log.info('Found an IAS Zone');
 
-            ninjaDevice = new IASZoneDevice(zcl, log.extend(zcl.toString()));
+            // FIXME
+            if (vals.ModelIdentifier.indexOf('IR') === 0) {
+              ninjaDevice = new IASZoneDevice(zcl, log.extend(zcl.toString()), 260, 'Motion Sensor');
+            } else {
+              ninjaDevice = new IASZoneDevice(zcl, log.extend(zcl.toString()), 207, 'Contact Sensor');
+            }
+
           }
 
           if (ninjaDevice) {
