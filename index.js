@@ -102,8 +102,23 @@ ZigBeeDriver.prototype.handleDevice = function(device) {
 
   device.on('endpoint', addEndpoint);
 
-  device.findEndpoints(0x0104);
-  device.findActiveEndpoints();
+  var foundClusters = false;
+
+  function findEndpoints() {
+    log.info('Searching for endpoints for device IEEE:%s Addr:0x%s', device.IEEEAddress, device.deviceInfo.shortAddr.toString(16));
+    device.findEndpoints(0x0104);
+    device.findActiveEndpoints();
+  }
+
+  findEndpoints();
+
+  var i = setInterval(function() {
+    if (foundClusters) {
+      clearInterval(i);
+    } else {
+      findEndpoints();
+    }
+  }, 20000);
 
   var self = this;
 
@@ -111,6 +126,8 @@ ZigBeeDriver.prototype.handleDevice = function(device) {
     log.debug('Got endpoint', endpoint.toString());
 
     endpoint.inClusters().then(function(inClusters) {
+
+      foundClusters = true;
 
       var basic = _.find(inClusters, function(c) {
         return c.description.name == 'Basic';
@@ -153,6 +170,7 @@ ZigBeeDriver.prototype.handleDevice = function(device) {
           }
 
           if (ninjaDevice) {
+            console.log('Registering')
             ninjaDevice.name += ' - ' + deviceName;
             ninjaDevice.G = 'zigbee' + device.IEEEAddress.toString() + endpoint.endpointId;
 

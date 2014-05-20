@@ -26,7 +26,8 @@ function OnOffDevice(cluster, log) {
 util.inherits(OnOffDevice, stream);
 
 OnOffDevice.prototype.write = function(val) {
-  this.cluster.commands[!!val?'On':'Off']().then(this.value.read).then(this.emit.bind(this, 'data'));
+  var value = (val === '1' || val === 1 || val === true || val === 'true');
+  this.cluster.commands[!!value?'On':'Off']().then(this.value.read).then(this.emit.bind(this, 'data'));
 };
 
 module.exports = OnOffDevice;
