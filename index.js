@@ -4,8 +4,9 @@ var util = require('util');
 var stream = require('stream');
 var glob = require('glob');
 var ZigBee = require('zigbee');
-
+var crypto = require('crypto');
 var _ = require('underscore');
+
 var OnOffDevice = require('./devices/OnOffDevice');
 var MeteringDevice = require('./devices/MeteringDevice');
 var IASZoneDevice = require('./devices/IASZoneDevice');
@@ -16,22 +17,30 @@ function ZigBeeDriver(opts, app) {
 
   this.seenDevices = [];
 
+  var panId = md5(app.serial).substring(0,4);
+
   app.once('client::up', function() {
     this.log.debug('Starting up');
     this.log.debug('Configuration', this.opts);
-
+    this.log.debug('Using pan id 0x' + panId);
     // TODO: Allow path set by configuration/env vars
     this.getDevicePath(function(err, path) {
       if (err) {
         return this.log.warn('Not starting driver -', err.message);
       }
-      this.connect(path);
+      this.connect(path, panId);
     }.bind(this));
 
   }.bind(this));
 
 }
 util.inherits(ZigBeeDriver, stream);
+
+function md5(str) {
+  var hash = crypto.createHash('md5');
+  hash.update(str);
+  return hash.digest('hex');
+}
 
 ZigBeeDriver.prototype.getDevicePath = function(cb) {
   glob('{/dev/tty.zigbee,/dev/cu.usbmodem*}', function (err, devices) {
@@ -45,11 +54,13 @@ ZigBeeDriver.prototype.getDevicePath = function(cb) {
 };
 
 
-ZigBeeDriver.prototype.connect = function(path) {
+ZigBeeDriver.prototype.connect = function(path, panId) {
   var log = this.log;
   var self = this;
 
-  var client = this.client = new ZigBee();
+  var client = this.client = new ZigBee({
+    panId: parseInt(panId, 16)
+  });
   client.connectToPort(path)
     .then(client.firmwareVersion.bind(client))
     .then(function(version) {

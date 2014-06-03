@@ -11,7 +11,7 @@
   "dependencies": {
     "glob": "~3.2.9",
     "underscore": "~1.6.0",
-    "zigbee": "git://github.com/ninjablocks/node-zigbee.git#51f57a6fc33b219ebb468574e7ce2812fd41d92f"
+    "zigbee": "git://github.com/ninjablocks/node-zigbee.git#65bfccaaf7193f42d822afda547594a11b642371"
   }
 }
 

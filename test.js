@@ -22,6 +22,7 @@ function getLog(name) {
 }
 var app = new EventEmitter();
 app.log = getLog(require('./package.json').name);
+app.serial = 'test';
 
 var driver = new (require('./index'))(opts, app);
 driver.log = app.log;
