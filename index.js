@@ -138,13 +138,13 @@ ZigBeeDriver.prototype.handleDevice = function(device) {
 
     endpoint.inClusters().then(function(inClusters) {
 
-      foundClusters = true;
-
       var basic = _.find(inClusters, function(c) {
         return c.description.name == 'Basic';
       });
 
       basic.readAttributes('ManufacturerName', 'ModelIdentifier').then(function(vals) {
+
+        foundClusters = true;
 
         console.log('Model vals', vals);
         var deviceName = (vals.ModelIdentifier || '[unknown model]') + (vals.ManufacturerName?' by ' + vals.ManufacturerName:'');
